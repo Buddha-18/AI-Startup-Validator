@@ -34,7 +34,7 @@ function Login() {
       const res = await login(formData);
 
       if (res.success) {
-        navigate("/validate");
+        navigate("/dashboard");
       } else {
         setError(res.message || "Login Failed");
       }

@@ -9,6 +9,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuth } from "./context/AuthContext";
 
 import "./index.css";
+import Dashboard from "./pages/Dashboard";
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -47,7 +48,7 @@ function App() {
           path="/login"
           element={
             isAuthenticated ? (
-              <Navigate to="/validate" replace />
+              <Navigate to="/dashboard" replace />
             ) : (
               <Login />
             )
@@ -60,12 +61,22 @@ function App() {
           path="/register"
           element={
             isAuthenticated ? (
-              <Navigate to="/validate" replace />
+              <Navigate to="/dashboard" replace />
             ) : (
               <Register />
             )
           }
         />
+
+        { /* Dashboard */ }
+        <Route
+        path="/dashboard"
+        element={<ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
+        }
+        >
+        </Route>
 
 
         {/* Unknown Route */}

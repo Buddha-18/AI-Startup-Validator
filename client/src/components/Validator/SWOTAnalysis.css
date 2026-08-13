@@ -1,0 +1,282 @@
+.swot-section {
+  width: 100%;
+  margin-top: 32px;
+}
+
+/* ==========================================
+   Header
+========================================== */
+
+.swot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.swot-label {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.swot-header h2 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.swot-header p {
+  margin: 8px 0 0;
+  max-width: 680px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #64748b;
+}
+
+/* ==========================================
+   Generate Button
+========================================== */
+
+.swot-generate-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 12px 18px;
+  background: #111827;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: 0.2s ease;
+}
+
+.swot-generate-btn:hover {
+  background: #1f2937;
+}
+
+.swot-generate-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ==========================================
+   SWOT Grid
+========================================== */
+
+.swot-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+/* ==========================================
+   Cards
+========================================== */
+
+.swot-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.swot-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 22px;
+  border-bottom: 1px solid #eef0f3;
+}
+
+.swot-card-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.swot-card-header span {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.swot-count {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: #f3f4f6;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ==========================================
+   Items
+========================================== */
+
+.swot-items {
+  padding: 8px 22px 18px;
+}
+
+.swot-item {
+  display: flex;
+  gap: 14px;
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f1f3;
+}
+
+.swot-item:last-child {
+  border-bottom: none;
+}
+
+.swot-item-number {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: #9ca3af;
+  padding-top: 2px;
+}
+
+.swot-item h4 {
+  margin: 0 0 5px;
+  font-size: 14px;
+  font-weight: 650;
+  color: #111827;
+}
+
+.swot-item p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #6b7280;
+}
+
+/* ==========================================
+   Empty State
+========================================== */
+
+.swot-empty {
+  background: #ffffff;
+  border: 1px dashed #d1d5db;
+  border-radius: 16px;
+  padding: 60px 24px;
+  text-align: center;
+}
+
+.swot-empty h3 {
+  margin: 0;
+  font-size: 19px;
+  color: #111827;
+}
+
+.swot-empty p {
+  margin: 8px 0 20px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* ==========================================
+   Error
+========================================== */
+
+.swot-error {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 13px;
+}
+
+.swot-error button {
+  border: none;
+  background: transparent;
+  color: #991b1b;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ==========================================
+   Loading
+========================================== */
+
+.swot-loading {
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.swot-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #111827;
+  border-radius: 50%;
+  animation: swot-spin 0.8s linear infinite;
+}
+
+@keyframes swot-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================
+   Responsive
+========================================== */
+
+@media (max-width: 900px) {
+  .swot-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .swot-header {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 600px) {
+  .swot-header h2 {
+    font-size: 24px;
+  }
+
+  .swot-card-header {
+    padding: 18px;
+  }
+
+  .swot-items {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .swot-error {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .swot-generate-btn {
+    width: 100%;
+  }
+}

@@ -1,411 +1,579 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import API from "../api/api";
+
+import DashboardHeader from "../components/dashboard/DashboardHeader";
+import DashboardWelcome from "../components/dashboard/DashboardWelcome";
+import ValidatorSection from "../components/dashboard/ValidatorSection";
+import StartupBar from "../components/dashboard/StartupBar";
+import AnalysisWorkflow from "../components/dashboard/AnalysisWorkflow";
+
 import "./Dashboard.css";
-import { useAuth } from "../context/AuthContext";
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const navigate = useNavigate();
 
-  const stats = [
-    {
-      title: "Total Validations",
-      value: "24",
-      description: "Startup ideas analyzed",
-      icon: "🚀",
-    },
-    {
-      title: "Average Score",
-      value: "82%",
-      description: "Validation accuracy",
-      icon: "📊",
-    },
-    {
-      title: "Market Insights",
-      value: "18",
-      description: "Reports generated",
-      icon: "💡",
-    },
-    {
-      title: "Saved Ideas",
-      value: "12",
-      description: "Ideas bookmarked",
-      icon: "⭐",
-    },
-  ];
+  const [startup, setStartup] = useState(null);
 
-  const validations = [
-    {
-      name: "AI Healthcare Assistant",
-      score: "91%",
-      status: "Strong Potential",
-      date: "Today",
-    },
-    {
-      name: "Smart Agriculture Platform",
-      score: "78%",
-      status: "Good Opportunity",
-      date: "Yesterday",
-    },
-    {
-      name: "Personal Finance AI",
-      score: "85%",
-      status: "Promising",
-      date: "3 days ago",
-    },
-  ];
+  const [activeStage, setActiveStage] =
+    useState("executiveSummary");
+
+  const [formVisible, setFormVisible] =
+    useState(true);
+
+  const [loadingStartup, setLoadingStartup] =
+    useState(true);
+
+  // ==========================================
+  // LOADING STATES
+  // ==========================================
+
+  const [analysisLoading, setAnalysisLoading] =
+    useState(false);
+
+  const [marketLoading, setMarketLoading] =
+    useState(false);
+
+  const [competitorLoading, setCompetitorLoading] =
+    useState(false);
+
+  // ==========================================
+  // ERROR STATES
+  // ==========================================
+
+  const [error, setError] =
+    useState("");
+
+  const [marketError, setMarketError] =
+    useState("");
+
+  const [competitorError, setCompetitorError] =
+    useState("");
+
+  // ==========================================
+  // FETCH STARTUP
+  // ==========================================
+
+  useEffect(() => {
+    fetchStartup();
+  }, []);
+
+  const fetchStartup = async () => {
+    try {
+      setLoadingStartup(true);
+      setError("");
+
+      const token =
+        localStorage.getItem("token");
+
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      const response = await API.get(
+        "/startups/my-startup",
+        {
+          headers: {
+            Authorization:
+              `Bearer ${token}`,
+          },
+        }
+      );
+
+      const existingStartup =
+        response.data?.startup ||
+        response.data?.data ||
+        response.data;
+
+      setStartup(existingStartup);
+
+      if (existingStartup?._id) {
+        setFormVisible(false);
+      }
+
+    } catch (err) {
+      console.error(
+        "Fetch Startup Error:",
+        err
+      );
+
+      if (
+        err.response?.status === 401
+      ) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+
+        navigate("/login");
+        return;
+      }
+
+      if (
+        err.response?.status === 404
+      ) {
+        setStartup(null);
+        setFormVisible(true);
+      } else {
+        setError(
+          err.response?.data?.message ||
+          "Unable to load your startup."
+        );
+      }
+
+    } finally {
+      setLoadingStartup(false);
+    }
+  };
+
+  // ==========================================
+  // EXECUTIVE SUMMARY
+  // ==========================================
+
+  const handleSubmit = async (
+    formData
+  ) => {
+    try {
+      setAnalysisLoading(true);
+
+      setError("");
+      setMarketError("");
+      setCompetitorError("");
+
+      const token =
+        localStorage.getItem("token");
+
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      const response = await API.post(
+        "/analysis/executive-summary",
+        formData,
+        {
+          headers: {
+            Authorization:
+              `Bearer ${token}`,
+          },
+        }
+      );
+
+      const result = response.data;
+
+      if (!result.success) {
+        throw new Error(
+          result.message ||
+          "Failed to generate executive summary"
+        );
+      }
+
+      console.log(
+        "Executive Summary:",
+        result.data
+      );
+
+      setStartup(result.data);
+
+      setActiveStage(
+        "executiveSummary"
+      );
+
+      setFormVisible(false);
+
+      setTimeout(() => {
+        document
+          .getElementById(
+            "analysis-workspace"
+          )
+          ?.scrollIntoView({
+            behavior: "smooth",
+          });
+      }, 100);
+
+    } catch (err) {
+      console.error(
+        "Executive Summary Error:",
+        err
+      );
+
+      setError(
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to analyze your startup."
+      );
+
+    } finally {
+      setAnalysisLoading(false);
+    }
+  };
+
+  // ==========================================
+  // MARKET ANALYSIS
+  // ==========================================
+
+  const handleMarketAnalysis =
+    async () => {
+      try {
+        setMarketLoading(true);
+        setMarketError("");
+
+        const token =
+          localStorage.getItem("token");
+
+        if (!token) {
+          navigate("/login");
+          return;
+        }
+
+        if (!startup?._id) {
+          throw new Error(
+            "Startup ID not found."
+          );
+        }
+
+        const marketData = {
+          startupId:
+            startup._id,
+
+          startupName:
+            startup.startupName,
+
+          idea:
+            startup.idea,
+
+          industry:
+            startup.industry,
+
+          country:
+            startup.country,
+
+          audience:
+            startup.audience,
+
+          budget:
+            startup.budget,
+
+          teamSize:
+            startup.teamSize,
+        };
+
+        console.log(
+          "Sending Market Analysis:",
+          marketData
+        );
+
+        const response =
+          await API.post(
+            "/analysis/market",
+            marketData,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const result =
+          response.data;
+
+        if (!result.success) {
+          throw new Error(
+            result.message ||
+            "Failed to generate market analysis"
+          );
+        }
+
+        console.log(
+          "Market Analysis:",
+          result.data
+        );
+
+        setStartup(
+          (previous) => ({
+            ...previous,
+            marketAnalysis:
+              result.data,
+          })
+        );
+
+        setActiveStage(
+          "marketAnalysis"
+        );
+
+      } catch (err) {
+        console.error(
+          "Market Analysis Error:",
+          err
+        );
+
+        setMarketError(
+          err.response?.data
+            ?.message ||
+          err.message ||
+          "Failed to generate market analysis."
+        );
+
+      } finally {
+        setMarketLoading(false);
+      }
+    };
+
+  // ==========================================
+  // COMPETITOR ANALYSIS
+  // ==========================================
+
+  const handleCompetitorAnalysis =
+    async () => {
+      try {
+        setCompetitorLoading(true);
+        setCompetitorError("");
+
+        const token =
+          localStorage.getItem("token");
+
+        if (!token) {
+          navigate("/login");
+          return;
+        }
+
+        if (!startup?._id) {
+          throw new Error(
+            "Startup ID not found."
+          );
+        }
+
+        console.log(
+          "Generating Competitor Analysis for:",
+          startup._id
+        );
+
+        const response =
+          await API.post(
+            "/analysis/competitor",
+            {
+              startupId:
+                startup._id,
+            },
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const result =
+          response.data;
+
+        if (!result.success) {
+          throw new Error(
+            result.message ||
+            "Failed to generate competitor analysis"
+          );
+        }
+
+        console.log(
+          "Competitor Analysis:",
+          result.data
+        );
+
+        // Update React state
+        setStartup(
+          (previous) => ({
+            ...previous,
+            competitorAnalysis:
+              result.data,
+          })
+        );
+
+        // Keep user on Stage 03
+        setActiveStage(
+          "competitorAnalysis"
+        );
+
+      } catch (err) {
+        console.error(
+          "Competitor Analysis Error:",
+          err
+        );
+
+        setCompetitorError(
+          err.response?.data
+            ?.message ||
+          err.message ||
+          "Failed to generate competitor analysis."
+        );
+
+      } finally {
+        setCompetitorLoading(false);
+      }
+    };
+
+  // ==========================================
+  // NEW ANALYSIS
+  // ==========================================
+
+  const handleNewAnalysis = () => {
+    setStartup(null);
+
+    setFormVisible(true);
+
+    setActiveStage(
+      "executiveSummary"
+    );
+
+    setError("");
+    setMarketError("");
+    setCompetitorError("");
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  // ==========================================
+  // SHOW FORM
+  // ==========================================
+
+  const handleViewForm = () => {
+    setFormVisible(true);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  // ==========================================
+  // LOGOUT
+  // ==========================================
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    navigate("/login");
+  };
+
+  // ==========================================
+  // LOADING
+  // ==========================================
+
+  if (loadingStartup) {
+    return (
+      <div className="dashboard-loading">
+
+        <div className="loader"></div>
+
+        <p>
+          Loading your dashboard...
+        </p>
+
+      </div>
+    );
+  }
+
+  // ==========================================
+  // DASHBOARD
+  // ==========================================
 
   return (
     <div className="dashboard">
 
-      {/* Top Navbar */}
+      <DashboardHeader
+        onNewAnalysis={
+          handleNewAnalysis
+        }
+        onLogout={
+          handleLogout
+        }
+      />
 
-      <nav className="dashboard-navbar">
+      <main className="dashboard-main">
 
-        <div className="brand">
-          <span className="brand-logo">
-            AI
-          </span>
-          <h2>Startup Validator</h2>
-        </div>
+        <DashboardWelcome
+          startup={startup}
+        />
 
+        {/* General Error */}
 
-        <div className="nav-profile">
-
-          <div className="user-info">
-            <span>
-              {user?.name || "User"}
-            </span>
-            <small>
-              Founder
-            </small>
+        {error && (
+          <div className="dashboard-error">
+            {error}
           </div>
+        )}
 
-          <div className="avatar">
-            {user?.name
-              ? user.name.charAt(0).toUpperCase()
-              : "U"}
-          </div>
+        {/* Validator Form */}
 
-        </div>
+        {formVisible && (
+          <ValidatorSection
+            onSubmit={
+              handleSubmit
+            }
+            loading={
+              analysisLoading
+            }
+          />
+        )}
 
-      </nav>
+        {/* Existing Startup */}
 
+        {startup &&
+          !formVisible && (
+            <StartupBar
+              startup={startup}
+              onViewForm={
+                handleViewForm
+              }
+            />
+          )}
 
+        {/* Analysis Workflow */}
 
-      {/* Main Container */}
-
-      <main className="dashboard-container">
-
-
-        {/* Welcome Hero */}
-
-        <section className="welcome-section">
-
-          <div className="welcome-content">
-
-            <p className="greeting">
-              Welcome back 👋
-            </p>
-
-            <h1>
-              Validate your next
-              <span> startup idea </span>
-              with AI
-            </h1>
-
-            <p className="welcome-description">
-              Analyze market potential, competition,
-              customer demand and growth opportunities
-              before building your product.
-            </p>
-
-
-            <button className="primary-btn">
-              + Validate New Startup
-            </button>
-
-          </div>
-
-
-
-          <div className="hero-card">
-
-            <div className="ai-circle">
-              AI
-            </div>
-
-            <h3>
-              AI Powered Analysis
-            </h3>
-
-            <p>
-              Get intelligent insights about your
-              startup idea within minutes.
-            </p>
-
-          </div>
-
-
-        </section>
-
-
-
-
-        {/* Statistics */}
-
-        <section className="stats-grid">
-
-          {
-            stats.map((item,index)=>(
-              <div 
-                className="stat-card"
-                key={index}
-              >
-
-                <div className="stat-icon">
-                  {item.icon}
-                </div>
-
-                <div>
-                  <h2>
-                    {item.value}
-                  </h2>
-
-                  <h4>
-                    {item.title}
-                  </h4>
-
-                  <p>
-                    {item.description}
-                  </p>
-                </div>
-
-
-              </div>
-            ))
+        <AnalysisWorkflow
+          startup={startup}
+          activeStage={
+            activeStage
+          }
+          setActiveStage={
+            setActiveStage
           }
 
-        </section>
-
-
-
-
-        {/* Quick Actions */}
-
-
-        <section className="section">
-
-          <div className="section-header">
-
-            <h2>
-              Quick Actions
-            </h2>
-
-          </div>
-
-
-
-          <div className="actions-grid">
-
-
-            <div className="action-card">
-
-              <div>
-                🔍
-              </div>
-
-              <h3>
-                Validate Idea
-              </h3>
-
-              <p>
-                Check your startup idea potential.
-              </p>
-
-            </div>
-
-
-
-
-            <div className="action-card">
-
-              <div>
-                📈
-              </div>
-
-              <h3>
-                Market Research
-              </h3>
-
-              <p>
-                Understand your target market.
-              </p>
-
-            </div>
-
-
-
-
-            <div className="action-card">
-
-              <div>
-                ⚡
-              </div>
-
-              <h3>
-                Generate Report
-              </h3>
-
-              <p>
-                Create detailed AI insights.
-              </p>
-
-            </div>
-
-
-          </div>
-
-
-        </section>
-
-
-
-
-
-
-        {/* Recent Validations */}
-
-
-        <section className="section">
-
-
-          <div className="section-header">
-
-            <h2>
-              Recent Validations
-            </h2>
-
-            <button>
-              View All
-            </button>
-
-          </div>
-
-
-
-          <div className="validation-table">
-
-
-            {
-              validations.map((item,index)=>(
-
-                <div 
-                  className="validation-row"
-                  key={index}
-                >
-
-                  <div className="startup-name">
-
-                    <div className="startup-icon">
-                      🚀
-                    </div>
-
-                    <div>
-
-                      <h4>
-                        {item.name}
-                      </h4>
-
-                      <span>
-                        {item.date}
-                      </span>
-
-                    </div>
-
-                  </div>
-
-
-
-
-                  <div className="score">
-                    {item.score}
-                  </div>
-
-
-
-                  <div className="status">
-                    {item.status}
-                  </div>
-
-
-                </div>
-
-              ))
-            }
-
-
-
-          </div>
-
-
-
-        </section>
-
-
-
-
-
-
-        {/* User Profile */}
-
-
-        <section className="profile-card">
-
-
-          <div className="profile-avatar">
-
-            {
-              user?.name
-              ? user.name.charAt(0)
-              : "U"
-            }
-
-          </div>
-
-
-          <div className="profile-details">
-
-            <h3>
-              {user?.name || "Startup Founder"}
-            </h3>
-
-            <p>
-              {user?.email || "Your registered email"}
-            </p>
-
-
-            <span>
-              Free Plan
-            </span>
-
-          </div>
-
-
-          <button>
-            Manage Profile
-          </button>
-
-
-        </section>
-
-
-
+          marketLoading={
+            marketLoading
+          }
+
+          marketError={
+            marketError
+          }
+
+          onMarketAnalysis={
+            handleMarketAnalysis
+          }
+
+          competitorLoading={
+            competitorLoading
+          }
+
+          competitorError={
+            competitorError
+          }
+
+          onCompetitorAnalysis={
+            handleCompetitorAnalysis
+          }
+
+          onNewAnalysis={
+            handleNewAnalysis
+          }
+        />
 
       </main>
-
 
     </div>
   );
 };
-
 
 export default Dashboard;
